@@ -11,7 +11,14 @@ GroveLEDBarPWM::GroveLEDBarPWM(uint8_t dataPin, uint8_t clockPin)
     _transitionTime(250),
     _level(0),
     _targetLevel(0),
-    _lastTransitionUpdate(0)
+    _lastTransitionUpdate(0),
+    _flashing(false),
+    _flashIndex(0),
+    _flashOriginalBrightness(0),
+    _flashBrightness(0),
+    _flashSpeed(250),
+    _flashRising(true),
+    _lastFlashUpdate(0)
 {
   for (uint8_t i = 0; i < LED_COUNT; ++i) {
     _brightness[i] = 0;
@@ -166,6 +173,46 @@ bool GroveLEDBarPWM::isTransitioning() const
 
 void GroveLEDBarPWM::update()
 {
+  // Flashing is independent of bar-level transitions.
+  if (_flashing) {
+    unsigned long now = millis();
+
+    if (now - _lastFlashUpdate >= 10) {
+      _lastFlashUpdate = now;
+
+      uint8_t channel = logicalToChannel(_flashIndex);
+
+      // Approximate number of PWM counts per 10 ms required to
+      // complete one ramp in _flashSpeed milliseconds.
+      uint16_t steps = _flashSpeed / 10;
+      if (steps < 1) steps = 1;
+
+      uint16_t amount = 255UL / steps;
+      if (amount < 1) amount = 1;
+
+      if (_flashRising) {
+        uint16_t next = (uint16_t)_brightness[channel] + amount;
+
+        if (next >= 255) {
+          _brightness[channel] = 255;
+          _flashRising = false;
+        } else {
+          _brightness[channel] = (uint8_t)next;
+        }
+      } else {
+        if (_brightness[channel] <= amount ||
+            _brightness[channel] <= _flashOriginalBrightness) {
+          _brightness[channel] = _flashOriginalBrightness;
+          _flashing = false;
+        } else {
+          _brightness[channel] -= amount;
+        }
+      }
+
+      sendFrame();
+    }
+  }
+
   if (!_transition || _level == _targetLevel) return;
 
   unsigned long now = millis();
@@ -198,6 +245,34 @@ void GroveLEDBarPWM::update()
   }
 
   sendFrame();
+}
+
+void GroveLEDBarPWM::setFlashSpeed(uint16_t milliseconds)
+{
+  if (milliseconds < 10) milliseconds = 10;
+  _flashSpeed = milliseconds;
+}
+
+uint16_t GroveLEDBarPWM::getFlashSpeed() const
+{
+  return _flashSpeed;
+}
+
+void GroveLEDBarPWM::flashLED(uint8_t index)
+{
+  if (index >= LED_COUNT) return;
+
+  _flashIndex = index;
+  _flashOriginalBrightness = _brightness[logicalToChannel(index)];
+  _flashBrightness = _flashOriginalBrightness;
+  _flashRising = true;
+  _flashing = true;
+  _lastFlashUpdate = millis();
+}
+
+bool GroveLEDBarPWM::isFlashing() const
+{
+  return _flashing;
 }
 
 void GroveLEDBarPWM::setBrightness(uint8_t index, uint8_t brightness)

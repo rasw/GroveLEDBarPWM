@@ -32,6 +32,12 @@ public:
   void update();
   bool isTransitioning() const;
 
+  // Flash one logical LED from its current brightness to 100% and back.
+  void setFlashSpeed(uint16_t milliseconds);
+  uint16_t getFlashSpeed() const;
+  void flashLED(uint8_t index);
+  bool isFlashing() const;
+
   void setBrightness(uint8_t index, uint8_t brightness);
   void setBrightnessPercent(uint8_t index, uint8_t percent);
 
@@ -75,6 +81,14 @@ private:
   uint8_t _targetLevel;
 
   unsigned long _lastTransitionUpdate;
+
+  bool _flashing;
+  uint8_t _flashIndex;
+  uint8_t _flashOriginalBrightness;
+  uint8_t _flashBrightness;
+  uint16_t _flashSpeed;
+  bool _flashRising;
+  unsigned long _lastFlashUpdate;
 
   void send16(uint16_t value);
   void latch();

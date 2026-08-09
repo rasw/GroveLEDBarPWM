@@ -1,4 +1,4 @@
-# GroveLEDBarPWM V1.3.0
+# GroveLEDBarPWM V1.4.0
 
 V1.2 provides configurable GPIOs, graduated brightness, non-blocking segment-by-segment transitions, transition-time control, and individual LED brightness control.
 
@@ -101,3 +101,27 @@ bar.getBrightnessArrayPWM(pwm);
 ```
 
 Array indexes are logical LED positions 0-9 and respect `setGreenToRed()`.
+
+
+## V1.4 individual LED flash
+
+Flash one logical LED from its current brightness to 100% and back:
+
+```cpp
+bar.setFlashSpeed(250);
+bar.flashLED(4);
+```
+
+Call `bar.update()` regularly from `loop()`.
+
+The original LED brightness is saved automatically and restored when the flash finishes. Other LEDs are unaffected.
+
+Check whether a flash is active:
+
+```cpp
+if (bar.isFlashing()) {
+  // flash still running
+}
+```
+
+`setFlashSpeed()` specifies the approximate time in milliseconds for the rising/falling ramp.
