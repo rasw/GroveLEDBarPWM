@@ -300,7 +300,50 @@ void GroveLEDBarPWM::update()
     _brightness[dotChannel] = 255;
   }
 
-  if (changed || _effect == EFFECT_MOVING_DOT) sendFrame();
+  else if (_effect == EFFECT_KNIGHT_RIDER) {
+    unsigned long now = millis();
+
+    // Move the Knight Rider position using the same timing model
+    // as the Moving Dot effect.
+    if (now - _effectLastUpdate >= _effectSpeed) {
+      _effectLastUpdate = now;
+
+      if (_effectForward) {
+        if (_effectPosition < LED_COUNT - 1) {
+          ++_effectPosition;
+        } else {
+          _effectForward = false;
+          --_effectPosition;
+        }
+      } else {
+        if (_effectPosition > 0) {
+          --_effectPosition;
+        } else {
+          _effectForward = true;
+          ++_effectPosition;
+        }
+      }
+
+      changed = true;
+    }
+
+    // Graduated glow: centre 100%, adjacent 60%, next 30%.
+    static const uint8_t glowPercent[3] = {100, 60, 30};
+
+    for (int8_t offset = -2; offset <= 2; ++offset) {
+      int16_t logical = (int16_t)_effectPosition + offset;
+      if (logical < 0 || logical >= LED_COUNT) continue;
+
+      uint8_t distance = (uint8_t)(offset < 0 ? -offset : offset);
+      uint8_t value = (uint16_t)glowPercent[distance] * 255U / 100U;
+      uint8_t channel = logicalToChannel((uint8_t)logical);
+
+      // Stand-alone effect test: the effect controls these LEDs.
+      _brightness[channel] = value;
+    }
+  }
+
+  if (changed || _effect != EFFECT_NONE) sendFrame();
 }
 
 void GroveLEDBarPWM::setBrightness(uint8_t index,uint8_t brightness)

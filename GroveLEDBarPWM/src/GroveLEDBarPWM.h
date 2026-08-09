@@ -9,7 +9,8 @@ public:
 
   enum Effect {
     EFFECT_NONE = 0,
-    EFFECT_MOVING_DOT = 1
+    EFFECT_MOVING_DOT = 1,
+    EFFECT_KNIGHT_RIDER = 2
   };
 
   GroveLEDBarPWM(uint8_t dataPin = 8, uint8_t clockPin = 9);

@@ -1,4 +1,4 @@
-# GroveLEDBarPWM V1.6.0
+# GroveLEDBarPWM V1.7.0
 
 V1.5 adds a stable non-blocking flash overlay. A flashing LED is controlled by a separate flash value, while the normal bar transition continues underneath.
 
@@ -60,3 +60,18 @@ bar.startEffect(GroveLEDBarPWM::EFFECT_MOVING_DOT);
 ```
 
 Call `bar.update()` from `loop()`. Stop with `bar.stopEffect()`. Stopping restores the underlying bar brightness.
+
+
+## V1.7 Knight Rider
+
+```cpp
+bar.setEffectSpeed(100);
+bar.startEffect(GroveLEDBarPWM::EFFECT_KNIGHT_RIDER);
+```
+
+The centre LED runs at 100%, adjacent LEDs at 60%, and the next LEDs at 30%. The effect travels to each end and reverses.
+
+
+### V1.7.0 FIXED
+
+Fixed Knight Rider position advancement. The effect now moves from LED 0 to LED 9 and back instead of remaining at the initial position.
