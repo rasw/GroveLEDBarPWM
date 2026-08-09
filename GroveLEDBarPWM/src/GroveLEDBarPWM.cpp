@@ -216,6 +216,50 @@ void GroveLEDBarPWM::setBrightnessPercent(uint8_t index, uint8_t percent)
   setBrightness(index, brightness);
 }
 
+void GroveLEDBarPWM::setBrightnessArray(const uint8_t percentages[LED_COUNT])
+{
+  if (percentages == nullptr) return;
+
+  for (uint8_t i = 0; i < LED_COUNT; ++i) {
+    uint8_t percent = percentages[i];
+    if (percent > 100) percent = 100;
+    _brightness[logicalToChannel(i)] =
+        (uint16_t)percent * 255U / 100U;
+  }
+
+  sendFrame();
+}
+
+void GroveLEDBarPWM::getBrightnessArray(uint8_t percentages[LED_COUNT]) const
+{
+  if (percentages == nullptr) return;
+
+  for (uint8_t i = 0; i < LED_COUNT; ++i) {
+    percentages[i] =
+        (uint16_t)_brightness[logicalToChannel(i)] * 100U / 255U;
+  }
+}
+
+void GroveLEDBarPWM::setBrightnessArrayPWM(const uint8_t pwm[LED_COUNT])
+{
+  if (pwm == nullptr) return;
+
+  for (uint8_t i = 0; i < LED_COUNT; ++i) {
+    _brightness[logicalToChannel(i)] = pwm[i];
+  }
+
+  sendFrame();
+}
+
+void GroveLEDBarPWM::getBrightnessArrayPWM(uint8_t pwm[LED_COUNT]) const
+{
+  if (pwm == nullptr) return;
+
+  for (uint8_t i = 0; i < LED_COUNT; ++i) {
+    pwm[i] = _brightness[logicalToChannel(i)];
+  }
+}
+
 uint8_t GroveLEDBarPWM::getBrightness(uint8_t index) const
 {
   if (index >= LED_COUNT) return 0;

@@ -1,4 +1,4 @@
-# GroveLEDBarPWM V1.2.0
+# GroveLEDBarPWM V1.3.0
 
 V1.2 provides configurable GPIOs, graduated brightness, non-blocking segment-by-segment transitions, transition-time control, and individual LED brightness control.
 
@@ -60,3 +60,44 @@ void loop() {
 ```
 
 Transitions are non-blocking and occur one LED at a time.
+
+
+## V1.3 individual array control
+
+Set all ten LEDs with percentage values:
+
+```cpp
+uint8_t pattern[10] = {
+  5, 20, 40, 60, 80,
+  100, 80, 60, 40, 20
+};
+
+bar.setBrightnessArray(pattern);
+```
+
+Or use raw MY9221 PWM values:
+
+```cpp
+uint8_t pwm[10] = {
+  13, 51, 102, 153, 204,
+  255, 204, 153, 102, 51
+};
+
+bar.setBrightnessArrayPWM(pwm);
+```
+
+Read the complete current pattern:
+
+```cpp
+uint8_t pattern[10];
+bar.getBrightnessArray(pattern);
+```
+
+or:
+
+```cpp
+uint8_t pwm[10];
+bar.getBrightnessArrayPWM(pwm);
+```
+
+Array indexes are logical LED positions 0-9 and respect `setGreenToRed()`.

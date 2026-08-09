@@ -34,6 +34,15 @@ public:
 
   void setBrightness(uint8_t index, uint8_t brightness);
   void setBrightnessPercent(uint8_t index, uint8_t percent);
+
+  // Set/read all 10 LEDs as percentage values (0-100).
+  void setBrightnessArray(const uint8_t percentages[LED_COUNT]);
+  void getBrightnessArray(uint8_t percentages[LED_COUNT]) const;
+
+  // Set/read all 10 LEDs as raw MY9221 PWM values (0-255).
+  void setBrightnessArrayPWM(const uint8_t pwm[LED_COUNT]);
+  void getBrightnessArrayPWM(uint8_t pwm[LED_COUNT]) const;
+
   uint8_t getBrightness(uint8_t index) const;
   uint8_t getBrightnessPercent(uint8_t index) const;
   void setAllBrightness(uint8_t brightness);
