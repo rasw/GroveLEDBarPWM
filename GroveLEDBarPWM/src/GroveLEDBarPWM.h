@@ -10,7 +10,8 @@ public:
   enum Effect {
     EFFECT_NONE = 0,
     EFFECT_MOVING_DOT = 1,
-    EFFECT_KNIGHT_RIDER = 2
+    EFFECT_KNIGHT_RIDER = 2,
+    EFFECT_PULSE = 3
   };
 
   GroveLEDBarPWM(uint8_t dataPin = 8, uint8_t clockPin = 9);
@@ -43,6 +44,11 @@ public:
   void startEffect(Effect effect);
   void stopEffect();
   bool isEffectRunning() const;
+
+  // Pulse/Breathe controls
+  void setPulseRange(uint8_t minimumPercent, uint8_t maximumPercent);
+  uint8_t getPulseMinimum() const;
+  uint8_t getPulseMaximum() const;
 
   void setBrightness(uint8_t index, uint8_t brightness);
   void setBrightnessPercent(uint8_t index, uint8_t percent);
@@ -94,6 +100,12 @@ private:
   uint8_t _effectPosition;
   bool _effectForward;
   unsigned long _effectLastUpdate;
+
+  // Pulse/Breathe state
+  uint8_t _pulseValue;
+  bool _pulseRising;
+  uint8_t _pulseMinimum;
+  uint8_t _pulseMaximum;
 
   void send16(uint16_t value);
   void latch();

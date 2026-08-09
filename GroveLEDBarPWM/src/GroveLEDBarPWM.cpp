@@ -12,7 +12,11 @@ GroveLEDBarPWM::GroveLEDBarPWM(uint8_t dataPin, uint8_t clockPin)
     _effectSpeed(150),
     _effectPosition(0),
     _effectForward(true),
-    _effectLastUpdate(0)
+    _effectLastUpdate(0),
+    _pulseValue(0),
+    _pulseRising(true),
+    _pulseMinimum(0),
+    _pulseMaximum(255)
 {
   for (uint8_t i = 0; i < LED_COUNT; ++i) {
     _brightness[i] = 0;
@@ -343,7 +347,69 @@ void GroveLEDBarPWM::update()
     }
   }
 
+  else if (_effect == EFFECT_PULSE) {
+    unsigned long now = millis();
+
+    if (now - _effectLastUpdate >= _effectSpeed) {
+      _effectLastUpdate = now;
+
+      if (_pulseRising) {
+        if (_pulseValue < _pulseMaximum) {
+          ++_pulseValue;
+        } else {
+          _pulseRising = false;
+          if (_pulseValue > _pulseMinimum) {
+            --_pulseValue;
+          }
+        }
+      } else {
+        if (_pulseValue > _pulseMinimum) {
+          --_pulseValue;
+        } else {
+          _pulseRising = true;
+          if (_pulseValue < _pulseMaximum) {
+            ++_pulseValue;
+          }
+        }
+      }
+
+      changed = true;
+    }
+
+    for (uint8_t i = 0; i < LED_COUNT; ++i) {
+      _brightness[i] = _pulseValue;
+    }
+  }
+
   if (changed || _effect != EFFECT_NONE) sendFrame();
+}
+
+void GroveLEDBarPWM::setPulseRange(uint8_t minimumPercent, uint8_t maximumPercent)
+{
+  if (minimumPercent > 100) minimumPercent = 100;
+  if (maximumPercent > 100) maximumPercent = 100;
+
+  if (minimumPercent > maximumPercent) {
+    uint8_t temp = minimumPercent;
+    minimumPercent = maximumPercent;
+    maximumPercent = temp;
+  }
+
+  _pulseMinimum = (uint16_t)minimumPercent * 255U / 100U;
+  _pulseMaximum = (uint16_t)maximumPercent * 255U / 100U;
+
+  if (_pulseValue < _pulseMinimum) _pulseValue = _pulseMinimum;
+  if (_pulseValue > _pulseMaximum) _pulseValue = _pulseMaximum;
+}
+
+uint8_t GroveLEDBarPWM::getPulseMinimum() const
+{
+  return (uint16_t)_pulseMinimum * 100U / 255U;
+}
+
+uint8_t GroveLEDBarPWM::getPulseMaximum() const
+{
+  return (uint16_t)_pulseMaximum * 100U / 255U;
 }
 
 void GroveLEDBarPWM::setBrightness(uint8_t index,uint8_t brightness)

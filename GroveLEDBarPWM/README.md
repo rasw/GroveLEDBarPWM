@@ -1,4 +1,4 @@
-# GroveLEDBarPWM V1.7.0
+# GroveLEDBarPWM V1.8.0
 
 V1.5 adds a stable non-blocking flash overlay. A flashing LED is controlled by a separate flash value, while the normal bar transition continues underneath.
 
@@ -75,3 +75,36 @@ The centre LED runs at 100%, adjacent LEDs at 60%, and the next LEDs at 30%. The
 ### V1.7.0 FIXED
 
 Fixed Knight Rider position advancement. The effect now moves from LED 0 to LED 9 and back instead of remaining at the initial position.
+
+
+## V1.8 Pulse/Breathe
+
+Start the basic whole-bar pulse:
+
+```cpp
+bar.setEffectSpeed(20);
+bar.startEffect(GroveLEDBarPWM::EFFECT_PULSE);
+```
+
+All ten LEDs fade together from off to full brightness and back again.
+
+The effect is non-blocking and is stopped with:
+
+```cpp
+bar.stopEffect();
+```
+
+which restores the underlying bar brightness.
+
+
+## Pulse/Breathe range
+
+The pulse range can be limited to a percentage of full PWM:
+
+```cpp
+bar.setPulseRange(10, 80);
+bar.setEffectSpeed(20);
+bar.startEffect(GroveLEDBarPWM::EFFECT_PULSE);
+```
+
+This produces a 10% to 80% breathe cycle. The range values are automatically constrained to 0–100%.
