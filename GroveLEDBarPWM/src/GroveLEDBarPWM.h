@@ -7,51 +7,73 @@ class GroveLEDBarPWM {
 public:
   static constexpr uint8_t LED_COUNT = 10;
 
-  // Defaults match the verified XIAO ESP32-C3 / Grove LED Bar V2.1 wiring.
   GroveLEDBarPWM(uint8_t dataPin = 8, uint8_t clockPin = 9);
 
   void begin();
 
-  // Set the number of illuminated logical segments: 0..10.
+  void setPins(uint8_t dataPin, uint8_t clockPin);
+  uint8_t getDataPin() const;
+  uint8_t getClockPin() const;
+
   void setLevel(uint8_t level);
 
-  // Set one logical LED's brightness: 0..255.
-  // LED 0 is the first LED at the current logical end of the bar.
-  void setBrightness(uint8_t index, uint8_t brightness);
+  // Non-blocking, segment-by-segment transitions.
+  void setTransition(bool enable);
+  bool getTransition() const;
 
-  // Set all LEDs to the same brightness.
+  // Fine control: brightness counts added/removed approximately every 10 ms.
+  void setTransitionSpeed(uint8_t speed);
+  uint8_t getTransitionSpeed() const;
+
+  // Easier control: approximate fade time for each LED, in milliseconds.
+  void setTransitionTime(uint16_t milliseconds);
+  uint16_t getTransitionTime() const;
+
+  void update();
+  bool isTransitioning() const;
+
+  void setBrightness(uint8_t index, uint8_t brightness);
+  void setBrightnessPercent(uint8_t index, uint8_t percent);
+  uint8_t getBrightness(uint8_t index) const;
+  uint8_t getBrightnessPercent(uint8_t index) const;
   void setAllBrightness(uint8_t brightness);
 
-  // true  = logical level runs Green -> Red
-  // false = logical level runs Red -> Green
   void setGreenToRed(bool enable);
-
   bool getGreenToRed() const;
 
-  // When enabled, setLevel() applies a graduated brightness profile
-  // to the active LEDs. When disabled, active LEDs are full brightness.
   void setGraduated(bool enable);
-
   bool getGraduated() const;
 
-  // Immediately refresh the MY9221.
-  void show();
+  void setGraduationMin(uint8_t percentage);
+  uint8_t getGraduationMin() const;
 
-  // Turn all LEDs off.
+  void show();
   void clear();
 
 private:
   uint8_t _dataPin;
   uint8_t _clockPin;
   uint8_t _brightness[LED_COUNT];
+
   bool _greenToRed;
   bool _graduated;
+  bool _transition;
+
+  uint8_t _graduationMin;
+  uint8_t _transitionSpeed;
+  uint16_t _transitionTime;
   uint8_t _level;
+  uint8_t _targetLevel;
+
+  unsigned long _lastTransitionUpdate;
 
   void send16(uint16_t value);
   void latch();
   void sendFrame();
+
   uint8_t logicalToChannel(uint8_t index) const;
+  uint8_t graduatedBrightness(uint8_t index) const;
+  uint8_t targetBrightnessForLogical(uint8_t index) const;
 };
 
 #endif

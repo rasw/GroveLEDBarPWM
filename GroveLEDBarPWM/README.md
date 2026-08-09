@@ -1,80 +1,62 @@
-# GroveLEDBarPWM V1.0.0
+# GroveLEDBarPWM V1.2.0
 
-A lightweight Arduino library for the Seeed Grove LED Bar V2.1 using its MY9221 LED driver.
+V1.2 provides configurable GPIOs, graduated brightness, non-blocking segment-by-segment transitions, transition-time control, and individual LED brightness control.
 
-## Verified hardware
+## Pins
 
-Tested with:
-- XIAO ESP32-C3
-- Grove LED Bar V2.1
-- DATA = GPIO 8
-- CLOCK = GPIO 9
-
-## Verified channel mapping
-
-| MY9221 channel | Physical LED |
-|---:|---|
-| 0 | Red |
-| 1 | Yellow |
-| 2 | Green |
-| 3 | Green |
-| 4 | Green |
-| 5 | Green |
-| 6 | Green |
-| 7 | Green |
-| 8 | Green |
-| 9 | Green |
-| 10 | Unused |
-| 11 | Unused |
-
-## Basic use
+Your verified setup can be selected with:
 
 ```cpp
-#include <GroveLEDBarPWM.h>
+GroveLEDBarPWM bar(20, 21);
+```
 
-GroveLEDBarPWM bar;
+The constructor defaults remain DATA GPIO 8 and CLOCK GPIO 9.
 
-void setup() {
-  bar.begin();
-  bar.setGreenToRed(true);
-  bar.setLevel(5);
-}
+## Individual LED brightness
+
+Raw MY9221 brightness, 0–255:
+
+```cpp
+bar.setBrightness(0, 128);
+bar.setBrightness(1, 200);
+bar.setBrightness(2, 255);
+```
+
+Percentage brightness, 0–100%:
+
+```cpp
+bar.setBrightnessPercent(0, 5);
+bar.setBrightnessPercent(1, 10);
+bar.setBrightnessPercent(2, 20);
+```
+
+Read the current brightness:
+
+```cpp
+uint8_t pwm = bar.getBrightness(0);
+uint8_t percent = bar.getBrightnessPercent(0);
+```
+
+LED indexes are logical LED positions 0–9 and respect `setGreenToRed()`.
+
+Individual brightness control is independent of graduated mode, so custom brightness patterns can be created.
+
+## Graduation
+
+The tested graduated curve is:
+
+**5%, 10%, 20%, 30%, 40%, 50%, 60%, 70%, 80%, 100%**
+
+## Transitions
+
+```cpp
+bar.setTransition(true);
+bar.setTransitionTime(500);
+bar.setLevel(10);
 
 void loop() {
+  bar.update();
 }
 ```
 
-## Graduated brightness
-
-```cpp
-#include <GroveLEDBarPWM.h>
-
-GroveLEDBarPWM bar;
-
-void setup() {
-  bar.begin();
-  bar.setGreenToRed(true);
-  bar.setGraduated(true);
-  bar.setLevel(10);
-}
-
-void loop() {
-}
-```
-
-`setGraduated(true)` makes the active logical LEDs progressively brighter, while `setGraduated(false)` makes all active LEDs full brightness.
-
-## Individual brightness
-
-```cpp
-bar.setBrightness(0, 64);   // 25%
-bar.setBrightness(1, 128);  // 50%
-bar.setBrightness(2, 192);  // 75%
-bar.setBrightness(3, 255);  // 100%
-```
-
-The index is a logical index and follows the current `setGreenToRed()` direction.
-
-## Notes
-
-V1 uses the MY9221 transfer protocol verified experimentally with the Grove LED Bar V2.1. The library intentionally does not depend on the Seeed Grove LED Bar library.
+Transitions are non-blocking and occur one LED at a time.
