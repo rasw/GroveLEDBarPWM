@@ -1,127 +1,62 @@
-# GroveLEDBarPWM V1.4.0
+# GroveLEDBarPWM V1.6.0
 
-V1.2 provides configurable GPIOs, graduated brightness, non-blocking segment-by-segment transitions, transition-time control, and individual LED brightness control.
+V1.5 adds a stable non-blocking flash overlay. A flashing LED is controlled by a separate flash value, while the normal bar transition continues underneath.
 
-## Pins
+```cpp
+bar.setTransition(true);
+bar.setTransitionTime(500);
+bar.setFlashSpeed(500);
 
-Your verified setup can be selected with:
+bar.setLevel(3);
+bar.setLevel(10);
+bar.flashLED(5);
+```
+
+Call `bar.update()` from `loop()`.
+
+The flashing LED rises from its current brightness to 100%, then falls toward the current underlying brightness. The overlay uses the greater of the two values, preventing a transition direction change from making the LED flicker.
+
+Verified pin example:
 
 ```cpp
 GroveLEDBarPWM bar(20, 21);
 ```
 
-The constructor defaults remain DATA GPIO 8 and CLOCK GPIO 9.
 
-## Individual LED brightness
+## TEST2
 
-Raw MY9221 brightness, 0–255:
+`FlashDuringDirectionChange` starts exactly one flash, then reverses the bar transition while that same flash is still running.
 
-```cpp
-bar.setBrightness(0, 128);
-bar.setBrightness(1, 200);
-bar.setBrightness(2, 255);
-```
+No second `flashLED()` call is made during the reversal.
 
-Percentage brightness, 0–100%:
+Expected result:
 
-```cpp
-bar.setBrightnessPercent(0, 5);
-bar.setBrightnessPercent(1, 10);
-bar.setBrightnessPercent(2, 20);
-```
+- LED 5 rises smoothly to 100%.
+- The bar transition reverses underneath it.
+- LED 5 continues its flash.
+- LED 5 returns to the current underlying brightness.
+- No second flash occurs.
 
-Read the current brightness:
 
-```cpp
-uint8_t pwm = bar.getBrightness(0);
-uint8_t percent = bar.getBrightnessPercent(0);
-```
+## TEST3
 
-LED indexes are logical LED positions 0–9 and respect `setGreenToRed()`.
+This test verifies that a flash returns to the LED's CURRENT underlying brightness.
 
-Individual brightness control is independent of graduated mode, so custom brightness patterns can be created.
+1. LED 5 starts at 30%.
+2. LED 5 flashes to 100%.
+3. While it is flashing, the underlying LED brightness is changed to 60%.
+4. The flash should finish and LED 5 should remain at 60%.
 
-## Graduation
+This is the final state-management test before V1.5.0 is committed.
 
-The tested graduated curve is:
 
-**5%, 10%, 20%, 30%, 40%, 50%, 60%, 70%, 80%, 100%**
+## V1.6 Moving Dot
 
-## Transitions
+A non-blocking process indicator that sweeps from logical LED 0 to LED 9 and back.
 
 ```cpp
-bar.setTransition(true);
-bar.setTransitionTime(500);
-bar.setLevel(10);
-
-void loop() {
-  bar.update();
-}
+bar.setEffectSpeed(150);
+bar.startEffect(GroveLEDBarPWM::EFFECT_MOVING_DOT);
 ```
 
-Transitions are non-blocking and occur one LED at a time.
-
-
-## V1.3 individual array control
-
-Set all ten LEDs with percentage values:
-
-```cpp
-uint8_t pattern[10] = {
-  5, 20, 40, 60, 80,
-  100, 80, 60, 40, 20
-};
-
-bar.setBrightnessArray(pattern);
-```
-
-Or use raw MY9221 PWM values:
-
-```cpp
-uint8_t pwm[10] = {
-  13, 51, 102, 153, 204,
-  255, 204, 153, 102, 51
-};
-
-bar.setBrightnessArrayPWM(pwm);
-```
-
-Read the complete current pattern:
-
-```cpp
-uint8_t pattern[10];
-bar.getBrightnessArray(pattern);
-```
-
-or:
-
-```cpp
-uint8_t pwm[10];
-bar.getBrightnessArrayPWM(pwm);
-```
-
-Array indexes are logical LED positions 0-9 and respect `setGreenToRed()`.
-
-
-## V1.4 individual LED flash
-
-Flash one logical LED from its current brightness to 100% and back:
-
-```cpp
-bar.setFlashSpeed(250);
-bar.flashLED(4);
-```
-
-Call `bar.update()` regularly from `loop()`.
-
-The original LED brightness is saved automatically and restored when the flash finishes. Other LEDs are unaffected.
-
-Check whether a flash is active:
-
-```cpp
-if (bar.isFlashing()) {
-  // flash still running
-}
-```
-
-`setFlashSpeed()` specifies the approximate time in milliseconds for the rising/falling ramp.
+Call `bar.update()` from `loop()`. Stop with `bar.stopEffect()`. Stopping restores the underlying bar brightness.
