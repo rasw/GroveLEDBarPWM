@@ -22,6 +22,15 @@ public:
   uint8_t getClockPin() const;
 
   void setLevel(uint8_t level);
+  void setLED(uint8_t index, uint8_t percent);
+
+  void setLevelPercent(uint8_t percent);
+  uint8_t getLevelPercent() const;
+
+  // Global output brightness. This scales the display without changing
+  // the underlying LED brightness/graph/flash state.
+  void setGlobalBrightness(uint8_t percent);
+  uint8_t getGlobalBrightness() const;
 
   void setTransition(bool enable);
   bool getTransition() const;
@@ -31,12 +40,23 @@ public:
   uint16_t getTransitionTime() const;
 
   void update();
+
+  // V2.1 optional background animation service.
+  // On ESP32 this runs update() from a low-priority FreeRTOS task.
+  void setAutoUpdate(bool enable);
+  bool getAutoUpdate() const;
+  bool isAutoUpdateSupported() const;
+
   bool isTransitioning() const;
 
   void setFlashSpeed(uint16_t milliseconds);
   uint16_t getFlashSpeed() const;
   void flashLED(uint8_t index);
+  void flashLED(uint8_t index, uint16_t milliseconds, uint8_t flashBrightness = 100);
+  void stopFlashLED(uint8_t index);
+  void stopAllFlashes();
   bool isFlashing() const;
+  bool isFlashing(uint8_t index) const;
 
   // V1.6 effects
   void setEffectSpeed(uint16_t milliseconds);
@@ -83,17 +103,21 @@ private:
   uint8_t _transitionSpeed;
   uint16_t _transitionTime;
   uint8_t _level;
+  uint8_t _levelPercent;
+  uint8_t _targetLevelPercent;
+  uint8_t _globalBrightness;
   uint8_t _targetLevel;
   unsigned long _lastTransitionUpdate;
 
-  // Flash overlay state.
-  bool _flashing;
-  uint8_t _flashIndex;
-  uint8_t _flashOriginalBrightness;
-  uint8_t _flashValue;
-  uint16_t _flashSpeed;
-  bool _flashRising;
-  unsigned long _flashLastUpdate;
+  // Multiple independent flash overlays.
+  bool _flashActive[LED_COUNT];
+  uint8_t _flashValue[LED_COUNT];
+  uint8_t _flashPeak[LED_COUNT];
+  uint16_t _flashSpeed[LED_COUNT];
+  bool _flashRising[LED_COUNT];
+  unsigned long _flashLastUpdate[LED_COUNT];
+  unsigned long _flashStartTime[LED_COUNT];
+  uint16_t _flashDefaultSpeed;
 
   Effect _effect;
   uint16_t _effectSpeed;
@@ -113,6 +137,19 @@ private:
   uint8_t logicalToChannel(uint8_t index) const;
   uint8_t graduatedBrightness(uint8_t index) const;
   uint8_t targetBrightnessForLogical(uint8_t index) const;
+  uint8_t graphBrightnessForPercent(uint8_t index, uint8_t percent) const;
+  void rebuildGraphFromPercent();
+  void stopFlashesOutsideLevel();
+
+  bool _begun;
+  bool _autoUpdate;
+
+#if defined(ARDUINO_ARCH_ESP32)
+  void* _autoTaskHandle;
+  static void autoUpdateTask(void* parameter);
+  void startAutoUpdateTask();
+  void stopAutoUpdateTask();
+#endif
 };
 
 #endif
